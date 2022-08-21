@@ -148,7 +148,7 @@ int FSolver::StaticAxisymmetric(CBigLinProb &L)
 
 //	TheView->SetDlgItemText(IDC_FRAME1,"Matrix Construction");
 //	TheView->m_prog1.SetPos(0);
-        printf("Matrix Construction\n");
+        //printf("Matrix Construction\n");
 //        pctr=0;
 
         if(Iter>0) L.Wipe();
@@ -756,10 +756,10 @@ int FSolver::StaticAxisymmetric(CBigLinProb &L)
 
 
             // report some results
-            char outstr[256];
-            sprintf(outstr,"Newton Iteration(%i) Relax=%.4g\n",Iter,Relax);
+            //char outstr[256];
+            //sprintf(outstr,"Newton Iteration(%i) Relax=%.4g\n",Iter,Relax);
 //        TheView->SetDlgItemText(IDC_FRAME2,outstr);
-            printf("%s", outstr);
+            //printf("%s", outstr);
             j=(int)  (100.*log10(res)/(log10(Precision)+2.));
             if (j>100) j=100;
 //        TheView->m_prog2.SetPos(j);

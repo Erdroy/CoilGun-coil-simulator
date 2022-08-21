@@ -208,7 +208,7 @@ int FSolver::HarmonicAxisymmetric(CBigComplexLinProb &L)
 
 //		TheView->SetDlgItemText(IDC_FRAME1,"Matrix Construction");
 //		TheView->m_prog1.SetPos(0);
-        printf("Matrix Construction\n");
+        //printf("Matrix Construction\n");
         pctr=0;
 
         if (Iter>0) L.Wipe();

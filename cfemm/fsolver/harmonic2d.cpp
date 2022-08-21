@@ -219,7 +219,7 @@ int FSolver::Harmonic2D(CBigComplexLinProb &L)
 
 //		TheView->SetDlgItemText(IDC_FRAME1,"Matrix Construction");
 //		TheView->m_prog1.SetPos(0);
-        printf("Matrix Construction\n");
+        //printf("Matrix Construction\n");
 
         if(Iter>0) L.Wipe();
 
@@ -854,9 +854,9 @@ int FSolver::Harmonic2D(CBigComplexLinProb &L)
             // report some results
             char outstr[256];
 // #ifdef NEWTON
-            if (ACSolver==1) sprintf(outstr,"Newton Iteration(%i) Relax=%.4g\n",Iter,Relax);
+            //if (ACSolver==1) sprintf(outstr,"Newton Iteration(%i) Relax=%.4g\n",Iter,Relax);
 // #else
-            else sprintf(outstr,"Successive Approx(%i) Relax=%.4g",Iter,Relax);
+            //else sprintf(outstr,"Successive Approx(%i) Relax=%.4g",Iter,Relax);
 // #endif
             printf("%s\n", outstr);
         }

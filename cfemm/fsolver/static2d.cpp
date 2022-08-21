@@ -179,7 +179,7 @@ int FSolver::Static2D(CBigLinProb &L)
 
 //	TheView->SetDlgItemText(IDC_FRAME1,"Matrix Construction");
 //	TheView->m_prog1.SetPos(0);
-        PrintMessage("Matrix Construction\n");
+        //PrintMessage("Matrix Construction\n");
 
 //        pctr = 0;
 
@@ -990,9 +990,9 @@ int FSolver::Static2D(CBigLinProb &L)
 
 
             // report some results
-            char outstr[256];
-            sprintf(outstr,"Newton Iteration(%i) Relax=%.4g\n",Iter,Relax);
-            PrintMessage(outstr);
+            // char outstr[256];
+            // sprintf(outstr,"Newton Iteration(%i) Relax=%.4g\n",Iter,Relax);
+            // PrintMessage(outstr);
 //        TheView->SetDlgItemText(IDC_FRAME2,outstr);
             j = (int)  (100.*log10(res)/(log10(Precision)+2.));
             if (j>100)

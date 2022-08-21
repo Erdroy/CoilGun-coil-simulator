@@ -185,7 +185,7 @@ bool FEASolver<PointPropT,BoundaryPropT,BlockPropT,CircuitPropT,BlockLabelT,Mesh
     std::stringstream err;
     err >> noskipws; // don't discard whitespace from message stream
 
-    WarnMessage ("FEASolver::LoadProblemFile\n");
+    //WarnMessage ("FEASolver::LoadProblemFile\n");
 
     input.open(file.c_str(), std::ifstream::in);
     if (!input.is_open())

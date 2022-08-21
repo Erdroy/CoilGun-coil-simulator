@@ -74,6 +74,7 @@ add_subdirectory(fsolver)
 add_subdirectory(fpproc)
 add_subdirectory(hsolver)
 add_subdirectory(hpproc)
+add_subdirectory(coilgunsim)
 
 install(
    FILES LICENSE-FEMM.txt LICENSE-Lua.txt LICENSE-triangle.txt
