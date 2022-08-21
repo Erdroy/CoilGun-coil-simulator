@@ -138,7 +138,7 @@ public:
     {
         CoilGunSimData data = {};
         
-        constexpr int currents[] = { 1000 };
+        constexpr int currents[] = { 10, 100, 1000 };
         constexpr int defaultCurrent = 5;
         
         m_api = {};
@@ -161,17 +161,24 @@ public:
         int steps = 0;
         while(true)
         {
+            constexpr int maxSteps = 150; // This should not be reached
+            constexpr double inductanceThreshold = 0.11; // Around 0.1uH of difference is small enough, to just stop the inductance mapping
+            
             auto inductance = FemmExtensions::IntegrateInductance(m_api, "Coil", defaultCurrent, "temp.fem");
-            printf("Inductance=%.1f\n", inductance.Abs());
+            printf("Inductance=%.1fuH\n", inductance.Abs());
             FemmExtensions::MoveGroup(m_api, 0, -1, ProjGroup);
 
-            // TODO: Stop simulation when the inductance is close to the raw coil inductance
-            // TODO: Save this distance so we can use it to limit the later calculations
-
-            if((rawInductance - inductance).Abs() <= 0.1) // Around 1uH of difference is small enough, to just stop the inductance mapping
+            // Stop simulation when the inductance is close to the raw coil inductance
+            if((rawInductance - inductance).Abs() <= inductanceThreshold)
                 break;
             
             steps++;
+
+            if(steps >= maxSteps)
+            {
+                printf("Maximum number of steps reached!\n");
+                break;
+            }
         }
         
         steps += 1; // One extra step to reach the center of the coil
