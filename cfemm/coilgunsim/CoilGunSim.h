@@ -156,12 +156,11 @@ public:
         
         CgsCreateProjectile(ProjectileDiameter, ProjectileLength);
         
-        // TODO: Make sure that projectile fits the boundary height
         
         int steps = 0;
+        // TODO: Calculate the maximal distance that the projectile can travel inside the boundary height
         while(true)
         {
-            constexpr int maxSteps = 150; // This should not be reached
             constexpr double inductanceThreshold = 0.11; // Around 0.1uH of difference is small enough, to just stop the inductance mapping
             
             auto inductance = FemmExtensions::IntegrateInductance(m_api, "Coil", defaultCurrent, "temp.fem");
@@ -174,6 +173,7 @@ public:
             
             steps++;
 
+            // Make sure that projectile fits the boundary height
             if(steps >= maxSteps)
             {
                 printf("Maximum number of steps reached!\n");
