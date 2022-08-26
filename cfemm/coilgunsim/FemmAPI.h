@@ -22,6 +22,12 @@ public:
         CComplex Voltage;
         CComplex FluxLinkage;
     };
+
+    struct BoundingBox
+    {
+        double x[2];
+        double y[2];
+    };
     
 private:
     std::shared_ptr<femm::FemmProblem> doc;
@@ -41,8 +47,13 @@ public:
         double depth,
         double min_angle);
     void mi_getmaterial(const char* matname);
+    void mi_addmaterial(const char* blockName, double mu_x, double mu_y,
+        double H_c = 0.0, double J = 0.0, double Cduct = 0.0, double Lam_d = 0.0, double Theta_hn = 0.0,
+        double LamFill = 0.0, int LamType = 0, double Theta_hx = 0.0, double Theta_hy = 0.0, int NStrands = 0,
+        double WireD  = 0.0);
     void mi_addnode(double x, double y);
-    void mi_addarc(double sx, double sy, double ex, double ey, double angle, double maxseg);
+    void mi_drawline(double x1, double y1, double x2, double y2);
+    void mi_drawarc(double sx, double sy, double ex, double ey, double angle, double maxseg);
     void mi_selectnode(double x, double y);
     void mi_clearselected();
     void mi_setnodeprop(int group_id, const char* boundary_marker_name = nullptr);
@@ -61,5 +72,10 @@ public:
     void mo_groupselectblock(int group);
     CircuitProperties mo_getcircuitproperties(const char* circuit) const;
     CComplex mo_blockintegral(int type);
+
+    BoundingBox mi_getboundingbox() const;
+    void mi_addboundprop(const char* boundName, double A0, double A1, double A2, double phi, double Mu, double Sig, double c0, double c1, int format);
+    void mi_selectarcsegment(double mx, double my);
+    void mi_makeABC(int enn, double arr, double ex, double wye, int bc);
 };
 #endif // FEMM_CAPI_H
