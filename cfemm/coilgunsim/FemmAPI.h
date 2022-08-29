@@ -52,6 +52,7 @@ public:
         double LamFill = 0.0, int LamType = 0, double Theta_hx = 0.0, double Theta_hy = 0.0, int NStrands = 0,
         double WireD  = 0.0);
     void mi_addnode(double x, double y);
+    void mi_addarc(double sx, double sy, double ex, double ey, double angle, double maxseg);
     void mi_drawline(double x1, double y1, double x2, double y2);
     void mi_drawarc(double sx, double sy, double ex, double ey, double angle, double maxseg);
     void mi_selectnode(double x, double y);
@@ -76,6 +77,7 @@ public:
     BoundingBox mi_getboundingbox() const;
     void mi_addboundprop(const char* boundName, double A0, double A1, double A2, double phi, double Mu, double Sig, double c0, double c1, int format);
     void mi_selectarcsegment(double mx, double my);
-    void mi_makeABC(int enn, double arr, double ex, double wye, int bc);
+    void mi_setarcsegmentprop(double maxsegdeg, const char* boundprop, bool hide, int group);
+    void mi_makeABC(int numLayers, double radius, int bctype);
 };
 #endif // FEMM_CAPI_H

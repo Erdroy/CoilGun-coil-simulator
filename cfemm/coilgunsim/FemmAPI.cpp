@@ -114,14 +114,7 @@ void FemmAPI::mi_addnode(double x, double y)
     doc->addNode(x,y,d);
 }
 
-void FemmAPI::mi_drawline(double x1, double y1, double x2, double y2)
-{
-    mi_addnode(x1,y1);
-    mi_addnode(x2,y2);
-    mi_addsegment(x1,y1,x2,y2);
-}
-
-void FemmAPI::mi_drawarc(double sx, double sy, double ex, double ey, double angle, double maxseg)
+void FemmAPI::mi_addarc(double sx, double sy, double ex, double ey, double angle, double maxseg)
 {
     femm::CArcSegment asegm;
     asegm.n0 = doc->closestNode(sx,sy);
@@ -133,6 +126,20 @@ void FemmAPI::mi_drawarc(double sx, double sy, double ex, double ey, double angl
 
     doc->addArcSegment(asegm);
     doc->unselectAll();
+}
+
+void FemmAPI::mi_drawline(double x1, double y1, double x2, double y2)
+{
+    mi_addnode(x1,y1);
+    mi_addnode(x2,y2);
+    mi_addsegment(x1,y1,x2,y2);
+}
+
+void FemmAPI::mi_drawarc(double x1, double y1, double x2, double y2, double tta, double dtta)
+{
+    mi_addnode(x1,y1);
+    mi_addnode(x2,y2);
+    mi_addarc(x1,y1,x2,y2,tta,dtta);
 }
 
 void FemmAPI::mi_selectnode(double x, double y)
@@ -161,8 +168,11 @@ void FemmAPI::mi_setnodeprop(int group_id, const char* boundary_marker_name)
         if(doc->nodelist[i]->IsSelected)
         {
             doc->nodelist[i]->InGroup = group_id;
-            doc->nodelist[i]->BoundaryMarker = nodepropidx;
-            doc->nodelist[i]->BoundaryMarkerName = nodeprop;
+            if (nodepropidx != -1)
+            {
+                doc->nodelist[i]->BoundaryMarker = nodepropidx;
+                doc->nodelist[i]->BoundaryMarkerName = nodeprop;
+            }
         }
     }
 }
@@ -177,7 +187,7 @@ void FemmAPI::mi_modifymaterial(const char* matname, int prop_id, void* value)
             switch (prop_id)
             {
             case 0:
-                prop->BlockName = *static_cast<const char**>(value);
+                prop->BlockName = static_cast<const char*>(value);
                 break;
             case 13:
                 mat->WireD = *static_cast<double*>(value);
@@ -208,9 +218,12 @@ void FemmAPI::mi_addsegment(double sx, double sy, double ex, double ey)
 void FemmAPI::mi_addblocklabel(double x, double y)
 {
     double d;
-    if (doc->nodelist.size()<2)
+    if (doc->nodelist.size() < 2)
+    {
         d = 1.e-08;
-    else{
+    }
+    else
+    {
         CComplex p0,p1,p2;
         p0 = doc->nodelist[0]->CC();
         p1 = p0;
@@ -541,10 +554,29 @@ void FemmAPI::mi_addboundprop(const char* boundName, double A0, double A1, doubl
 void FemmAPI::mi_selectarcsegment(double mx, double my)
 {
     if (doc->arclist.empty())
-        return 0;
+        return;
 
     int node = doc->closestArcSegment(mx,my);
     doc->arclist[node]->ToggleSelect();
+}
+
+void FemmAPI::mi_setarcsegmentprop(double maxsegdeg, const char* boundprop, bool hide, int group)
+{
+    int boundpropidx = -1;
+    if (doc->lineMap.count(boundprop))
+        boundpropidx = doc->lineMap[boundprop];
+    
+    for (int i=0; i<(int)doc->arclist.size(); i++)
+    {
+        if (doc->arclist[i]->IsSelected)
+        {
+            doc->arclist[i]->BoundaryMarker = boundpropidx;
+            doc->arclist[i]->BoundaryMarkerName = boundprop;
+            doc->arclist[i]->MaxSideLength = maxsegdeg;
+            doc->arclist[i]->Hidden = hide;
+            doc->arclist[i]->InGroup = group;
+        }
+    }
 }
 
 struct BoundsData
@@ -605,107 +637,53 @@ BoundsData u2D1[12] = {{0.09502262443438914},
 				{1.755732640246568, 0.22634702476369292, 8.00036486086015, 0.08401892313227052, 16.39879353450492, 0.04577080504067754, 28.795410205618264, 0.026177408464552673, 51.96731893999375, 0.013419338402750022, 119.11324967287628, 0.003968189868637491}};
 				
 
-void FemmAPI::mi_makeABC(int enn, double arr, double ex, double wye, int bc)
+void FemmAPI::mi_makeABC(int numLayers, double radius, int bctype)
 {
-    double d, z, r, x, y, R;
-    int flag = 1; // axisim only
-	
     const auto bounds = mi_getboundingbox();
-    double x0 = bounds.x[0];
-    double x1 = bounds.x[1];
-    double y0 = bounds.y[0];
-    double y1 = bounds.y[1];
+    const double y0 = bounds.y[0];
+    const double y1 = bounds.y[1];
     
     // unpack parameters;
-    if (enn>12)
-        enn=12;
-    else if (enn<1)
-        enn=1;
+    if (numLayers>12)
+        numLayers=12;
+    else if (numLayers<1)
+        numLayers=1;
+
+    const double y = (y0 + y1) / 2;
 	
-    int bctype=bc;
-	
-    if(flag == 0) // 2D planar case
-    {
-        R = arr;
-        x=ex;
-        y=wye;
-    }
-    else //  Axi case
-    {
-        x=0;
-        if (abs(wye) < 0.001)
-        {
-            y=wye;
-            R=arr;
-        }
-        else if (abs(ex) < 0.001)
-        {
-            y=ex;
-            R=arr;
-        }
-        else if (abs(arr) < 0.001)
-        {
-            y=(y0+y1)/2;
-            R=arr;
-        }
-        else
-        {
-            y=(y0+y1)/2;
-            R=(3/2)*abs(x1+I*(y1-y0)/2);
-        }
-    }
-	
-    // draw left boundary of interior domain
-    if (flag == 0)
-    {
-        mi_drawarc(x, y + R, x, y - R, 180, 1);
-    }
-    else
-    {
-        mi_drawline(0, y-1.1*R, 0, y+1.1*R);
-    }
+    mi_drawline(0, y - 1.1 * radius, 0, y + 1.1 * radius);
 	
     // draw right boundary of interior domain
-    mi_drawarc(x, y - R, x, y + R, 180, 1);
-	
-    d = 0.1*R/(2*enn);
+    mi_drawarc(0.0, y - radius, 0.0, y + radius, 180, 1);
+
+    const double d = 0.1 * radius / (2 * numLayers);
     
-    for(int k = 1; k < enn; k ++)
+    for(int k = 1; k < numLayers + 1; k ++)
     {
-        const auto str_n = std::to_string(k);
-        const auto str = std::string("u") + str_n;
+        const auto str = std::string("u") + std::to_string(k);
         
-        r = R*(1.0 + (2.0 * k - 1.0)/(20*k));
-        mi_drawarc(x, y - r - d, x, y + r + d, 180, 1);
-        z = (r*exp(I*(90/(k+1))*k*PI/180)).Abs();
-        mi_addblocklabel(x+Re(z),y+Im(z));
-        mi_selectlabel(x+Re(z),y+Im(z));
+        const double r = radius * (1.0 + (2 * k - 1.0) / (20 * numLayers));
+
+        mi_drawarc(0.0, y - r - d, 0.0, y + r + d, 180, 1);
+
+        const double z = (r * exp(I * (90 / (numLayers + 1)) * k * PI / 180)).Abs();
+    
+        if (bctype==0)
+            mi_addmaterial(str.c_str(), uAx0[numLayers].v[k], uAx0[numLayers].v[k]);
+        else
+            mi_addmaterial(str.c_str(), uAx1[numLayers].v[k], uAx1[numLayers].v[k]);
+        
+        mi_addblocklabel(Re(z), y + Im(z));
+        mi_selectlabel(Re(z), y + Im(z));
         mi_setblockprop(str.c_str(), true, 0, "<None>", 0, 0, 1);
         mi_clearselected();
-        if(flag == 0)
-        {
-            if (bctype==0)
-                mi_addmaterial(str.c_str(), u2D0[k].v[k], u2D0[k].v[k]);
-            else
-                mi_addmaterial(str.c_str(), u2D1[k].v[k], u2D1[k].v[k]);
-            mi_drawarc(x, y + r + d, x, y - r - d, 180, 1);
-        }
-        else
-        {
-            if (bctype==0)
-                mi_addmaterial(str.c_str(), uAx0[k].v[k], uAx0[k].v[k]);
-            else
-                mi_addmaterial(str.c_str(), uAx1[k].v[k], uAx1[k].v[k]);
-        }
     }
 	
 	if (bctype==0)
 	{
 	    mi_addboundprop("A=0", 0, 0, 0, 0, 0, 0, 0, 0, 0);
-	    mi_selectarcsegment(1.1*R+x, y);
-	    if(flag == 0)
-            mi_selectarcsegment(-1.1*R+x, y);
-        mi_setarcsegmentprop(1, "A=0", 0, 0);
+	    mi_selectarcsegment(1.1 * radius, y);
+        mi_setarcsegmentprop(1, "A=0", false, 0);
 	    mi_clearselected();
 	}
 }

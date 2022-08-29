@@ -65,6 +65,6 @@ public:
         SetCircuitCurrent(api, circuit, current);
         Analyze(api, fileName);
         api.mo_groupselectblock(0);
-        return  (api.mo_blockintegral(2) * 2.0) / (current * current) * 1E6;
+        return (api.mo_blockintegral(2) * 2.0) / (current * current) * 1E6;
     }
 };

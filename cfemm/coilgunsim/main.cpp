@@ -19,16 +19,18 @@ int main(int argc, char** argv)
             sprintf_s(fileName, "temp%d.fem", i);
             
             CoilGunSim sim = {};
-            sim.CoilLength = 45.0;
-            sim.CoilInnerDiameter = 7.0;
-            sim.CoilWireTurns = 220;
-            sim.CoilWireWidth = 0.9;
-            sim.ProjectileDiameter = 4.5;
-            sim.ProjectileLength = 35.0;
+            CoilGunSim::SimParameters parameters;
+            parameters.CoilLength = 45.0;
+            parameters.CoilInnerDiameter = 7.0;
+            parameters.CoilWireTurns = 220;
+            parameters.CoilWireWidth = 0.9;
+            parameters.ProjectileDiameter = 4.5;
+            parameters.ProjectileLength = 45.0;
             
-            const auto simData = sim.Simulate(fileName);
+            const auto simData = sim.Simulate(fileName, parameters);
 
             // TODO: Create file for this coil and save the data from the simulation
+
         }));
     }
 
