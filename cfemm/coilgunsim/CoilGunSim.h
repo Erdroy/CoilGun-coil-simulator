@@ -1,5 +1,7 @@
 ﻿#pragma once
 
+#include <femmconstants.h>
+
 #include "FemmExtensions.h"
 
 #pragma region FEMM DATA
@@ -9,6 +11,8 @@
 
 #define MATERIAL_WIRE "Wire"
 #define MATERIAL_PROJECTILE "Projectile"
+
+#define COPPER_WIRE_RESISTANCE 1.68e-8
 #pragma endregion
 
 class CoilGunSim
@@ -24,20 +28,26 @@ public:
 public:
     struct SimParameters
     {
+    public:
         int BoundaryLayers = 3;
         double BoundaryHeight = 150.0;
 
         double WireCompactFactor = 1.1;
+        double BoreWallWidth = 1.0;
         
+    public:
         double CoilLength = 35.0;
-        double CoilInnerDiameter = 7.0;
         int CoilWireTurns = 130;
-        double CoilWireWidth = 0.9;
-        double CoilShellWidth = 0.0;
-    
+        double CoilWireDiameter = 0.9;
+        
+    public:
         double ProjectileDiameter = 4.5;
         double ProjectileLength = 45;
         
+    public:
+        double CoilShellWidth = 0.0;
+    
+    public:
         /**
          * \brief The diameter of the hole.
          */
@@ -48,6 +58,7 @@ public:
          */
         double ProjectileHoleLength = 0.0;
         
+    public:
         /**
          * \brief The material of the projectile. Use FEMM to lookup different materials.
          *  The suggested materials are: 'M-50' (steel), '416 Stainless Steel' and 'Mu Metal' (the best one).
@@ -58,6 +69,77 @@ public:
          * \brief The material density of the projectile (grams per centimeter cubed)
          */
         double ProjectileMaterialDensity = 7.85;
+
+    public:
+        std::string GetCoilName() const
+        {
+            // In the coil name, we have to include all parameters that directly 
+            // [WireD]_C[Length]x[Turns]T-P[Diameter]x[Length]
+            // example: 0.9_C45.0x220T-P4.5x35.json
+            
+            char buffer[256] = {};
+            sprintf_s(buffer, "%.1f_C%.1fx%dT-P%.1fx%.0f",
+                CoilWireDiameter,
+                CoilLength,
+                CoilWireTurns,
+                ProjectileDiameter,
+                ProjectileLength
+            );
+
+            return buffer;
+        }
+
+        double GetCoilInnerDiameter() const
+        {
+            return ProjectileDiameter + BoreWallWidth * 2.0;
+        }
+
+        double GetCoilTurnsPerLayer() const
+        {
+            return CoilLength / CoilWireDiameter;
+        }
+        
+        double GetCoilLayers() const
+        {
+            const auto numLayers = CoilWireTurns / GetCoilTurnsPerLayer();
+    
+            return numLayers;
+        }
+
+        double GetCoilHeight() const
+        {
+            const double wireDiameter = CoilWireDiameter;
+            const auto height = GetCoilLayers() * wireDiameter * WireCompactFactor;
+    
+            return height;
+        }
+
+        double GetCoilWireLength() const
+        {
+            const double coilRadius = GetCoilInnerDiameter() / 2;
+            const double wireDiameter = CoilWireDiameter;
+            const auto numLayers = GetCoilLayers();
+            const auto turnsPerLayer = GetCoilTurnsPerLayer();
+    
+            // Calculate the length of the wire
+            auto wireLength = 0.0;
+            for(int layer = 0; layer < static_cast<int>(floor(numLayers)); layer++)
+            {
+                const auto layerRadius = coilRadius + layer * wireDiameter * WireCompactFactor;
+                wireLength += turnsPerLayer * PI * 2 * layerRadius;
+            }
+            const auto layerRadius = coilRadius + numLayers * wireDiameter * WireCompactFactor;
+            wireLength += turnsPerLayer * PI * 2 * layerRadius * (numLayers - floor(numLayers));
+            wireLength /= 1000.0;
+
+            return wireLength;
+        }
+
+        double GetCoilWireResistance() const
+        {
+            const auto wireRadius = CoilWireDiameter / 2;
+            return COPPER_WIRE_RESISTANCE * GetCoilWireLength() / (PI * (wireRadius / 1000.0) * (wireRadius / 1000.0));
+        }
     };
     
     struct SimData
@@ -123,11 +205,6 @@ public:
 private:
     FemmAPI m_api;
 
-private:
-    void CalculateCoilHeightAndLayers(SimData& data, const SimParameters& parameters) const;
-    void CalculateCoilWireLength(SimData& data, const SimParameters& parameters) const;
-    void CalculateCoilResistance(SimData& data, const SimParameters& parameters) const;
-    
 private:
     void CgsConfigure(const SimParameters& parameters);
     void CgsCreateBoundary(const SimParameters& parameters);

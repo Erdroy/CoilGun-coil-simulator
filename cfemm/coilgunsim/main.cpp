@@ -2,41 +2,57 @@
 #include "CoilGunSim.h"
 #include "CoilGen.h"
 
-constexpr int num_threads = 20;
-clock_t now;
+constexpr int num_threads = 1;
 
-#define PRINT_TIME() printf("Time: %.2fs\n", static_cast<double>(clock() - now) / CLOCKS_PER_SEC)
+clock_t Now;
+
+#define PRINT_TIME() printf("Time: %.2fs\n", static_cast<double>(clock() - Now) / CLOCKS_PER_SEC)
+
+void ThreadWorker(const CoilGunSim::SimParameters* coil, const int coilId, const int threadId)
+{
+    // Add index to the file name
+    char fileName[_MAX_FNAME];
+    sprintf_s(fileName, "temp%d.fem", threadId);
+            
+    CoilGunSim sim = {};
+    sim.EnableLogging = false;
+    const auto parameters = *coil;
+
+    printf("Simulating coil%d - %s\n",
+        coilId,
+        parameters.GetCoilName().c_str()
+    );
+                
+    const auto simData = sim.Simulate(fileName, parameters);
+
+    const auto descFile = parameters.GetCoilName() + ".json";
+    const auto dataFile = parameters.GetCoilName() + ".csv";
+
+    // TODO: Write-out the simulation data
+
+    printf(".");
+}
 
 void SimulateVariants(const int numCoils, const std::vector<CoilGunSim::SimParameters>& coils)
 {
     for(int coilId = 0; coilId < numCoils; coilId += num_threads)
     {
-        auto imax = coilId + num_threads;
-        imax = std::min(imax, numCoils);
-        const auto threadCount = imax - coilId;
+        auto maxCoils = coilId + num_threads;
+        maxCoils = std::min(maxCoils, numCoils);
+        const auto batchSize = maxCoils - coilId;
         
-        printf("Starting to simulate coils. Progress: %d/%d (+%d)\n", coilId, numCoils, threadCount);
-        printf("Simulating");
+        printf("Starting to simulate more coils. Progress: %d/%d (+%d)\n", coilId, numCoils, batchSize);
+
+        // TODO: ThreadPool-based worker
         
         // Run 24 Sim instances in parallel
         std::vector<std::thread> threads;
         threads.reserve(num_threads);
-        for (int threadId = 0; threadId < threadCount; threadId++)
+        for (int threadId = 0; threadId < batchSize; threadId++)
         {
             threads.emplace_back(std::thread([=]
             {
-                // Add index to the file name
-                char fileName[_MAX_FNAME];
-                sprintf_s(fileName, "temp%d.fem", threadId);
-            
-                CoilGunSim sim = {};
-                sim.EnableLogging = false;
-                const auto parameters = coils[coilId];
-                const auto simData = sim.Simulate(fileName, parameters);
-
-                // TODO: Write-out the simulation data
-
-                printf(".");
+                ThreadWorker(&coils[coilId + threadId], threadId + coilId, threadId);
             }));
         }
 
@@ -44,15 +60,14 @@ void SimulateVariants(const int numCoils, const std::vector<CoilGunSim::SimParam
         for (auto& thread : threads)
             thread.join();
         
-        printf(" DONE\n");
-        printf("Generated %d coil variants, time: ", numCoils);
+        printf("[DONE] Generated %d coil variants. ", batchSize);
         PRINT_TIME();
     }
 }
 
 int main(int argc, char** argv)
 {
-    now = clock();
+    Now = clock();
 
     int numCoils = 0;
     const auto coils = GetCoilVariants(&numCoils);
@@ -74,5 +89,5 @@ int main(int argc, char** argv)
     SimulateVariants(numCoils, coils);
     
     printf("Simulated all coils. Simulation time took: ");
-    printf("Time: %.2fs\n", static_cast<double>(clock() - now) / CLOCKS_PER_SEC);
+    PRINT_TIME();
 }

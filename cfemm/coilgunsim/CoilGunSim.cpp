@@ -1,49 +1,5 @@
 ﻿#include "CoilGunSim.h"
 
-#include <femmconstants.h>
-
-#define COPPER_WIRE_RESISTANCE 1.68e-8
-
-void CoilGunSim::CalculateCoilHeightAndLayers(SimData& data, const SimParameters& parameters) const
-{
-    const double wireDiameter = parameters.CoilWireWidth;
-    
-    const auto turnsPerLayer = parameters.CoilLength / parameters.CoilWireWidth;
-    const auto numLayers = parameters.CoilWireTurns / turnsPerLayer;
-    const auto height = numLayers * wireDiameter * parameters.WireCompactFactor;
-    
-    data.Coil.Height = height;
-    data.Coil.Layers = ceil(numLayers);
-}
-
-void CoilGunSim::CalculateCoilWireLength(SimData& data, const SimParameters& parameters) const
-{
-    const double coilRadius = parameters.CoilInnerDiameter / 2;
-    const double wireDiameter = parameters.CoilWireWidth;
-    const auto turnsPerLayer = parameters.CoilLength / parameters.CoilWireWidth;
-    const auto numLayers = parameters.CoilWireTurns / turnsPerLayer;
-    
-    // Calculate the length of the wire
-    auto wireLength = 0.0;
-    for(int layer = 0; layer <  static_cast<int>(floor(numLayers)); layer++)
-    {
-        const auto layerRadius = coilRadius + layer * wireDiameter * parameters.WireCompactFactor;
-        wireLength += turnsPerLayer * PI * 2 * layerRadius;
-    }
-    const auto layerRadius = coilRadius + numLayers * wireDiameter * parameters.WireCompactFactor;
-    wireLength += turnsPerLayer * PI * 2 * layerRadius * (numLayers - floor(numLayers));
-    wireLength /= 1000.0;
-
-    data.Coil.WireLength = wireLength;
-}
-
-void CoilGunSim::CalculateCoilResistance(SimData& data, const SimParameters& parameters) const
-{
-    const auto wireRadius = parameters.CoilWireWidth / 2;
-    
-    data.Coil.Resistance = COPPER_WIRE_RESISTANCE * data.Coil.WireLength / (PI * (wireRadius / 1000.0) * (wireRadius / 1000.0));
-}
-
 void CoilGunSim::CgsConfigure(const SimParameters& parameters)
 {
     // Setup
@@ -74,17 +30,17 @@ void CoilGunSim::CgsCreateBoundary(const SimParameters& parameters)
 
 void CoilGunSim::CgsCreateCoil(SimData& data, const SimParameters& parameters)
 {
-    double wireDiameter = parameters.CoilWireWidth;
+    double wireDiameter = parameters.CoilWireDiameter;
 
-    CalculateCoilHeightAndLayers(data, parameters);
-    CalculateCoilWireLength(data, parameters);
-    CalculateCoilResistance(data, parameters);
+    data.Coil.WireLength = parameters.GetCoilWireLength();
+    data.Coil.Height = parameters.GetCoilHeight();
+    data.Coil.Resistance = parameters.GetCoilWireResistance();
     
-    const auto outerDiameter = parameters.CoilInnerDiameter + data.Coil.Height;
+    const auto outerDiameter = parameters.GetCoilInnerDiameter() + data.Coil.Height;
     
     if (EnableLogging) printf("Creating coil (length=%.1f, inner_diameter=%.1f, outer_diameter=%.1f, turns=%d, wire_width=%.2f)...\n",
         parameters.CoilLength,
-        parameters.CoilInnerDiameter,
+        parameters.GetCoilInnerDiameter(),
         outerDiameter,
         parameters.CoilWireTurns,
         wireDiameter);
@@ -95,7 +51,7 @@ void CoilGunSim::CgsCreateCoil(SimData& data, const SimParameters& parameters)
     // Create circuit
     m_api.mi_addcircprop("Coil", 1, 1);
 
-    const auto x0 = parameters.CoilInnerDiameter / 2;
+    const auto x0 = parameters.GetCoilInnerDiameter() / 2;
     const auto x1 = outerDiameter / 2;
     const auto y0 = parameters.CoilLength / 2;
     const auto y1 = -parameters.CoilLength / 2;
