@@ -2,10 +2,12 @@ add_library(coilgunsim STATIC
     FemmAPI.cpp
     FemmAPI.h
     FemmExtensions.h
+    CoilGen.h
     CoilGunSim.h
     CoilGunSim.cpp
     CoilGunSim.Simulation.cpp
     )
+    
 target_include_directories(coilgunsim PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}> $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>/femmcli $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>/libfemm $<INSTALL_INTERFACE:include>)
 target_link_libraries(coilgunsim
     PUBLIC femm fmesher

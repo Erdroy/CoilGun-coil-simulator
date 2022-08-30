@@ -33,6 +33,7 @@ public:
         double CoilInnerDiameter = 7.0;
         int CoilWireTurns = 130;
         double CoilWireWidth = 0.9;
+        double CoilShellWidth = 0.0;
     
         double ProjectileDiameter = 4.5;
         double ProjectileLength = 45;
@@ -47,6 +48,10 @@ public:
          */
         double ProjectileHoleLength = 0.0;
         
+        /**
+         * \brief The material of the projectile. Use FEMM to lookup different materials.
+         *  The suggested materials are: 'M-50' (steel), '416 Stainless Steel' and 'Mu Metal' (the best one).
+         */
         const char* ProjectileMaterialType = "M-50";
         
         /**
@@ -111,6 +116,9 @@ public:
         std::vector<StepData> Steps = {};
         int NumSteps = 0;
     };
+
+public:
+    bool EnableLogging = true;
     
 private:
     FemmAPI m_api;
