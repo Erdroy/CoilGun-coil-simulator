@@ -13,20 +13,18 @@ void ThreadWorker(const CoilGunSim::SimParameters* coil, const int coilId, const
     // Add index to the file name
     char fileName[_MAX_FNAME];
     sprintf_s(fileName, "temp%d.fem", threadId);
-            
+    
     CoilGunSim sim = {};
     sim.EnableLogging = false;
     const auto parameters = *coil;
-
+    
     printf("Simulating coil%d - %s\n",
         coilId,
         parameters.GetCoilName().c_str()
     );
-                
+    
     const auto simData = sim.Simulate(fileName, parameters);
-
-    const auto descFile = parameters.GetCoilName() + ".json";
-    const auto dataFile = parameters.GetCoilName() + ".csv";
+    const auto outputFileName = parameters.GetCoilName() + ".csv";
 
     // TODO: Write-out the simulation data
 

@@ -71,6 +71,10 @@ public:
         double ProjectileMaterialDensity = 7.85;
 
     public:
+        /**
+         * \brief Returns coil name in format '[WireD]_C[Length]x[Turns]T-P[Diameter]x[Length]'.
+         * \return The coil name string.
+         */
         std::string GetCoilName() const
         {
             // In the coil name, we have to include all parameters that directly 
@@ -85,6 +89,8 @@ public:
                 ProjectileDiameter,
                 ProjectileLength
             );
+
+            // TODO: Add hollow, shape and shielding when done
 
             return buffer;
         }
