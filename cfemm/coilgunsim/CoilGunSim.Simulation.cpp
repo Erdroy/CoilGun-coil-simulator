@@ -83,6 +83,8 @@ CoilGunSim::SimData CoilGunSim::Simulate(const char* fileName, const SimParamete
         FemmExtensions::MoveGroup(m_api, 0, 1, GROUP_PROJECTILE);
     }
     
+    std::reverse(data.Steps.begin(), data.Steps.end());
+    
     m_api.femm_save(fileName);
     m_api.femm_close();
 

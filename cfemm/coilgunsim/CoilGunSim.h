@@ -18,7 +18,7 @@
 class CoilGunSim
 {
 public:
-    enum class CoilShape
+    enum class ProjectileShape
     {
         Cylinder = 0,
         Ball,
@@ -60,6 +60,11 @@ public:
         
     public:
         /**
+         * \brief The shape of the projectile.
+         */
+        ProjectileShape ProjectileShape = ProjectileShape::Cylinder;
+        
+        /**
          * \brief The material of the projectile. Use FEMM to lookup different materials.
          *  The suggested materials are: 'M-50' (steel), '416 Stainless Steel' and 'Mu Metal' (the best one).
          */
@@ -75,19 +80,45 @@ public:
          * \brief Returns coil name in format '[WireD]_C[Length]x[Turns]T-P[Diameter]x[Length]'.
          * \return The coil name string.
          */
-        std::string GetCoilName() const
+        std::string GetPairName() const
         {
             // In the coil name, we have to include all parameters that directly 
             // [WireD]_C[Length]x[Turns]T-P[Diameter]x[Length]
             // example: 0.9_C45.0x220T-P4.5x35.json
             
+            // TODO: Add hollow, shape and shielding when done
+
+            return GetCoilName() + "-" + GetProjectileName();
+        }
+        
+        std::string GetProjectileName() const
+        {
+            // In the coil name, we have to include all parameters that directly 
+            // P[Diameter]x[Length]
+            // example: P4.5x35
+            
             char buffer[256] = {};
-            sprintf_s(buffer, "%.1f_C%.1fx%dT-P%.1fx%.0f",
-                CoilWireDiameter,
-                CoilLength,
-                CoilWireTurns,
+            sprintf_s(buffer, "P%.1fx%.0f",
                 ProjectileDiameter,
                 ProjectileLength
+            );
+
+            // TODO: Add hollow, shape and shielding when done
+
+            return buffer;
+        }
+        
+        std::string GetCoilName() const
+        {
+            // In the coil name, we have to include all parameters that directly 
+            // [WireD]_C[Length]x[Turns]T
+            // example: 0.9_C45.0x220T
+            
+            char buffer[256] = {};
+            sprintf_s(buffer, "%.1f_C%.1fx%dT",
+                CoilWireDiameter,
+                CoilLength,
+                CoilWireTurns
             );
 
             // TODO: Add hollow, shape and shielding when done
