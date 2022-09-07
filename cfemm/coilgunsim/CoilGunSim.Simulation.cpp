@@ -11,6 +11,7 @@ CoilGunSim::SimData CoilGunSim::Simulate(const char* fileName, const SimParamete
     m_api.femm_init(fileName);
 
     // TODO: Coil shape option
+    // TODO: Projectile shape option (default, pointed [45 degrees], ball with hollow variants [default-hollow, ball-hollow etc.])
 
     CgsConfigure(parameters);
     CgsCreateBoundary(parameters);
@@ -64,7 +65,8 @@ CoilGunSim::SimData CoilGunSim::Simulate(const char* fileName, const SimParamete
         data.Currents.push_back(current);
     
     // Note: The projectile is now steps away from the coil, so we don't have to move it
-    
+
+    // TODO: Simulate until force (on the highest current) is below a set threshold (duplicate the last inductance value, as it will not change at this point)
     for (int i = 0; i < data.NumSteps; i++)
     {
         auto& step = data.Steps[i];

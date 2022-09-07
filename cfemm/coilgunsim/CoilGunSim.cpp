@@ -39,12 +39,16 @@ void CoilGunSim::CgsCreateCoil(SimData& data, const SimParameters& parameters)
     
     const auto outerDiameter = parameters.GetCoilInnerDiameter() + data.Coil.Height;
     
-    if (EnableLogging) printf("Creating coil (length=%.1f, inner_diameter=%.1f, outer_diameter=%.1f, turns=%d, wire_width=%.2f)...\n",
-        parameters.CoilLength,
-        parameters.GetCoilInnerDiameter(),
-        outerDiameter,
-        parameters.CoilWireTurns,
-        wireDiameter);
+    if (EnableLogging)
+    {
+        printf("Creating coil (length=%.1f, inner_diameter=%.1f, outer_diameter=%.1f, turns=%d, wire_width=%.2f)...\n",
+            parameters.CoilLength,
+            parameters.GetCoilInnerDiameter(),
+            outerDiameter,
+            parameters.CoilWireTurns,
+            wireDiameter
+        );
+    }
 
     // Apply wire_width (13 = 'WireD')
     m_api.mi_modifymaterial("Wire", 13, &wireDiameter);
