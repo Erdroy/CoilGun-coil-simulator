@@ -9,11 +9,12 @@ void CoilGunSim::CgsConfigure(const SimParameters& parameters)
         
     m_api.mi_getmaterial("Air");
     m_api.mi_getmaterial("1mm");
-    m_api.mi_getmaterial("1mm");
     m_api.mi_getmaterial(parameters.ProjectileMaterialType);
+    m_api.mi_getmaterial("1010 Steel");
 
     m_api.mi_modifymaterial("1mm", 0, MATERIAL_WIRE);
     m_api.mi_modifymaterial(parameters.ProjectileMaterialType, 0, MATERIAL_PROJECTILE);
+    m_api.mi_modifymaterial("1010 Steel", 0, MATERIAL_SHELL);
 }
 
 void CoilGunSim::CgsCreateBoundary(const SimParameters& parameters)
@@ -69,6 +70,33 @@ void CoilGunSim::CgsCreateCoil(SimData& data, const SimParameters& parameters)
     // Add a 'Wire' block with a 'Coil' circuit
     FemmExtensions::AddBlock(m_api, cx, cy, "Wire", "Coil", GROUP_COIL, parameters.CoilWireTurns);
 
+    if (parameters.CoilShellWidth > 0.0)
+    {
+        // Build a shell (magnetic shield) around the coil
+        FemmExtensions::AddLine(m_api, x1 + parameters.CoilShellWidth, y0, x1 + parameters.CoilShellWidth, y1, GROUP_COIL); // Right
+        FemmExtensions::AddLine(m_api, x1, y1, x1, y0, GROUP_COIL); // Left
+
+        if(parameters.CoilShellWhole)
+        {
+            FemmExtensions::AddLine(m_api, x0, y0 + parameters.CoilShellWidth, x1 + parameters.CoilShellWidth, y0 + parameters.CoilShellWidth, GROUP_COIL); // Top
+            FemmExtensions::AddLine(m_api, x0, y0 + parameters.CoilShellWidth, x0, y0, GROUP_COIL); // Left
+            FemmExtensions::AddLine(m_api, x1 + parameters.CoilShellWidth, y0, x1 + parameters.CoilShellWidth, y0 + parameters.CoilShellWidth, GROUP_COIL); // Right
+        
+            FemmExtensions::AddLine(m_api, x0, y1 - parameters.CoilShellWidth, x1 + parameters.CoilShellWidth, y1 - parameters.CoilShellWidth, GROUP_COIL); // Top
+            FemmExtensions::AddLine(m_api, x0, y1 - parameters.CoilShellWidth, x0, y1, GROUP_COIL); // Left
+            FemmExtensions::AddLine(m_api, x1 + parameters.CoilShellWidth, y1, x1 + parameters.CoilShellWidth, y1 - parameters.CoilShellWidth, GROUP_COIL); // Right
+        
+        }
+        else
+        {
+            FemmExtensions::AddLine(m_api, x1, y0, x1 + parameters.CoilShellWidth, y0, GROUP_COIL); // Top
+            FemmExtensions::AddLine(m_api, x1 + parameters.CoilShellWidth, y1, x1, y1, GROUP_COIL); // Bottom
+        }
+        
+        // Set the material of the shell
+        FemmExtensions::AddBlock(m_api, x1 + parameters.CoilShellWidth * 0.5, cy, MATERIAL_SHELL, "", GROUP_COMMON, 0);
+    }
+    
     m_api.mi_clearselected();
 }
 

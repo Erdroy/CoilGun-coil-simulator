@@ -11,6 +11,7 @@
 
 #define MATERIAL_WIRE "Wire"
 #define MATERIAL_PROJECTILE "Projectile"
+#define MATERIAL_SHELL "Shell"
 
 #define COPPER_WIRE_RESISTANCE 1.68e-8
 #pragma endregion
@@ -46,6 +47,7 @@ public:
         
     public:
         double CoilShellWidth = 0.0;
+        bool CoilShellWhole = true;
     
     public:
         /**
@@ -86,7 +88,7 @@ public:
             // [WireD]_C[Length]x[Turns]T-P[Diameter]x[Length]
             // example: 0.9_C45.0x220T-P4.5x35.json
             
-            // TODO: Add hollow, shape and shielding when done
+            // TODO: Add hollow and shape when done
 
             return GetCoilName() + "-" + GetProjectileName();
         }
@@ -103,7 +105,7 @@ public:
                 ProjectileLength
             );
 
-            // TODO: Add hollow, shape and shielding when done
+            // TODO: Add hollow and shape when done
 
             return buffer;
         }
@@ -121,8 +123,9 @@ public:
                 CoilWireTurns
             );
 
-            // TODO: Add hollow, shape and shielding when done
-
+            if (CoilShellWidth > 0.0)
+                sprintf_s(buffer, "%s-S%.1f", buffer, CoilShellWidth);
+            
             return buffer;
         }
 

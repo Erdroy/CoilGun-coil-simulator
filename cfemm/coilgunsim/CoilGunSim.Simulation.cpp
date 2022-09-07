@@ -10,8 +10,7 @@ CoilGunSim::SimData CoilGunSim::Simulate(const char* fileName, const SimParamete
     m_api = {};
     m_api.femm_init(fileName);
 
-    // TODO: Coil shelling option (with shell thickness)
-    // TODO: Coil shape option (default, pointed [45 degrees], ball with hollow variants [default-hollow, ball-hollow etc.])
+    // TODO: Coil shape option
 
     CgsConfigure(parameters);
     CgsCreateBoundary(parameters);
