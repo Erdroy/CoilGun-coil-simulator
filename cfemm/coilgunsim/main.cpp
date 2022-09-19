@@ -1,16 +1,42 @@
-#include <thread>
 #include "CoilGunSim.h"
 #include "CoilGen.h"
+#include "ThreadPool.h"
 
 #ifdef _WIN32
 #include <Windows.h>
 #endif
 
-constexpr int num_threads = 1;
+#define PRINT_TIME() printf("Time: %.2fs\n", static_cast<double>(clock() - g_now) / CLOCKS_PER_SEC)
 
-clock_t Now;
+constexpr uint32_t num_threads = 20u;
 
-#define PRINT_TIME() printf("Time: %.2fs\n", static_cast<double>(clock() - Now) / CLOCKS_PER_SEC)
+clock_t g_now;
+uint32_t g_skippedCoils = 0u;
+ThreadPool g_threadPool = {};
+
+bool CoilIsDone(const CoilGunSim::SimParameters& parameters)
+{
+    const auto outputFileNameJSON = "./Data/" + parameters.GetPairName() + ".json";
+    const auto outputFileNameCSV = "./Data/" + parameters.GetPairName() + ".csv";
+    
+    FILE* file = nullptr;
+    fopen_s(&file, outputFileNameJSON.c_str(), "r");
+     
+    if (file == nullptr)
+        return false;
+    
+    fclose(file);
+    
+    file = nullptr;
+    fopen_s(&file, outputFileNameCSV.c_str(), "r");
+    
+    if (file == nullptr)
+        return false;
+    
+    fclose(file);
+
+    return true;
+}
 
 void WriteDataToFile(const CoilGunSim::SimParameters& parameters, const CoilGunSim::SimData& data)
 {
@@ -48,7 +74,7 @@ void WriteDataToFile(const CoilGunSim::SimParameters& parameters, const CoilGunS
     fprintf(file, "\t\t\"InnerDiameter\": %f,\n", parameters.GetCoilInnerDiameter());
     fprintf(file, "\t\t\"Height\": %f,\n", data.Coil.Height);
     fprintf(file, "\t\t\"WireDiameter\": %f,\n", parameters.CoilWireDiameter);
-    fprintf(file, "\t\t\"WireTurns\": \"%d\",\n", parameters.CoilWireTurns);
+    fprintf(file, "\t\t\"WireTurns\": %d,\n", parameters.CoilWireTurns);
     fprintf(file, "\t\t\"WireLength\": %f,\n", data.Coil.WireLength);
     fprintf(file, "\t\t\"Layers\": %f,\n", parameters.GetCoilLayers());
     fprintf(file, "\t\t\"TurnsPerLayer\": %f,\n", parameters.GetCoilTurnsPerLayer());
@@ -107,7 +133,25 @@ void WriteDataToFile(const CoilGunSim::SimParameters& parameters, const CoilGunS
     fclose(file);
 }
 
-void ThreadWorker(const CoilGunSim::SimParameters* coil, const int coilId, const int threadId)
+void SimulateSingle()
+{
+    CoilGunSim sim = {};
+    sim.EnableLogging = true;
+    CoilGunSim::SimParameters parameters;
+    parameters.ProjectileMaterialType = "M-50";
+    parameters.CoilLength = 50.0;
+    parameters.CoilWireTurns = 220;
+    parameters.CoilWireDiameter = 0.9;
+    parameters.ProjectileDiameter = 4.5;
+    parameters.ProjectileLength = 35.0;
+    parameters.CoilShellWidth = 0.0;
+    parameters.BoreWallWidth = 1.0;
+    const auto data = sim.Simulate("temp0.fem", parameters);
+    // Write the simulation data to a file, inside "Data" folder
+    WriteDataToFile(parameters, data);
+}
+
+void ThreadWorker(const CoilGunSim::SimParameters* coil, const int coilId, const int numCoils, const uint32_t threadId)
 {
     // Add index to the file name
     char fileName[_MAX_FNAME];
@@ -117,54 +161,53 @@ void ThreadWorker(const CoilGunSim::SimParameters* coil, const int coilId, const
     sim.EnableLogging = false;
     const auto parameters = *coil;
     
-    printf("Simulating coil%d - %s\n",
-        coilId,
-        parameters.GetPairName().c_str()
+    printf("Simulating coil %d/%d (skipped %d) - %s\n",
+           coilId,
+           numCoils,
+           g_skippedCoils,
+           parameters.GetPairName().c_str()
     );
     
     const auto data = sim.Simulate(fileName, parameters);
 
     // Write the simulation data to a file, inside "Data" folder
     WriteDataToFile(parameters, data);
-    
-    printf(".");
+    PRINT_TIME();
 }
 
 void SimulateVariants(const int numCoils, const std::vector<CoilGunSim::SimParameters>& coils)
 {
-    for(int coilId = 0; coilId < numCoils; coilId += num_threads)
+    constexpr int startCoil = 0; // Change this, if simulation failed and you want to continue from a specific coil
+    
+    g_threadPool.Start(num_threads);
+    
+    for(int coilId = startCoil; coilId < numCoils; coilId++)
     {
-        auto maxCoils = coilId + num_threads;
-        maxCoils = min(maxCoils, numCoils);
-        const auto batchSize = maxCoils - coilId;
-        
-        printf("Starting to simulate more coils. Progress: %d/%d (+%d)\n", coilId, numCoils, batchSize);
-
-        // TODO: ThreadPool-based worker
-        
-        // Run 24 Sim instances in parallel
-        std::vector<std::thread> threads;
-        threads.reserve(num_threads);
-        for (int threadId = 0; threadId < batchSize; threadId++)
+        // Skip the coil if it's already simulated
+        if (CoilIsDone(coils[coilId]))
         {
-            threads.emplace_back(std::thread([=]
-            {
-                ThreadWorker(&coils[coilId + threadId], threadId + coilId, threadId);
-            }));
+            printf("Skip coil %d/%d\n", coilId, numCoils);
+            g_skippedCoils++;
+            continue;
         }
 
-        // Wait for all threads to finish
-        for (auto& thread : threads)
-            thread.join();
+        // Wait if there are too many jobs queued (memory optimization)
+        while (g_threadPool.GetNumJobs() > num_threads * 2)
+            std::this_thread::sleep_for(std::chrono::milliseconds(100));
         
-        printf("[DONE] Generated %d coil variants. ", batchSize);
-        PRINT_TIME();
+        g_threadPool.QueueJob([=] (const uint32_t threadId) {
+            ThreadWorker(&coils[coilId], coilId, numCoils, threadId);
+        });
+    }
+    
+    while (g_threadPool.IsBusy()) {
+        std::this_thread::sleep_for(std::chrono::milliseconds(100));
     }
 }
 
 int main(int argc, char** argv)
 {
-    Now = clock();
+    g_now = clock();
 
     int numCoils = 0;
     const auto coils = GetCoilVariants(&numCoils);
@@ -177,21 +220,11 @@ int main(int argc, char** argv)
     printf("Generated %d coil variants, took: ", numCoils);
     PRINT_TIME();
 
-    CoilGunSim sim = {};
-    sim.EnableLogging = true;
-    CoilGunSim::SimParameters parameters;
-    parameters.ProjectileMaterialType = "M-50";
-    parameters.CoilLength = 15.0;
-    parameters.CoilWireTurns = 220;
-    parameters.CoilWireDiameter = 0.9;
-    parameters.ProjectileDiameter = 4.5;
-    parameters.ProjectileLength = 5.0;
-    const auto data = sim.Simulate("temp0.fem", parameters);
-    // Write the simulation data to a file, inside "Data" folder
-    WriteDataToFile(parameters, data);
-
-    //SimulateVariants(numCoils, coils);
+    //SimulateSingle();
+    SimulateVariants(numCoils, coils);
     
     printf("Simulated all coils. Simulation time took: ");
     PRINT_TIME();
+
+    system("pause");
 }

@@ -117,7 +117,7 @@ public:
             // example: 0.9_C45.0x220T
             
             char buffer[256] = {};
-            sprintf_s(buffer, "%.1f_C%.1fx%dT",
+            sprintf_s(buffer, "%.1f_C%.0fx%dT",
                 CoilWireDiameter,
                 CoilLength,
                 CoilWireTurns

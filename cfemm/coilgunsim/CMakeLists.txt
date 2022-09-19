@@ -17,6 +17,8 @@ target_link_libraries(coilgunsim
     )
 
 add_executable(coilgunsim-bin
+    ThreadPool.h
+    ThreadPool.cpp
     main.cpp
     )
 
