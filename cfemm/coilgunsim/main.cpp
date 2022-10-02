@@ -153,6 +153,8 @@ void SimulateSingle()
 
 void ThreadWorker(const CoilGunSim::SimParameters* coil, const int coilId, const int numCoils, const uint32_t threadId)
 {
+    const auto simStart = clock();
+    
     // Add index to the file name
     char fileName[_MAX_FNAME];
     sprintf_s(fileName, "temp%d.fem", threadId);
@@ -161,18 +163,19 @@ void ThreadWorker(const CoilGunSim::SimParameters* coil, const int coilId, const
     sim.EnableLogging = false;
     const auto parameters = *coil;
     
-    printf("Simulating coil %d/%d (skipped %d) - %s\n",
+    printf("Simulating coil '%s' %d/%d (skipped %d)\n",
+           parameters.GetPairName().c_str(),
            coilId,
            numCoils,
-           g_skippedCoils,
-           parameters.GetPairName().c_str()
+           g_skippedCoils
     );
     
     const auto data = sim.Simulate(fileName, parameters);
 
     // Write the simulation data to a file, inside "Data" folder
     WriteDataToFile(parameters, data);
-    PRINT_TIME();
+    const auto time = static_cast<double>(clock() - simStart) / CLOCKS_PER_SEC;
+    printf("Finished coil '%s' %d/%d (done in %.1fs) \n", parameters.GetPairName().c_str(), coilId, numCoils, time);
 }
 
 void SimulateVariants(const int numCoils, const std::vector<CoilGunSim::SimParameters>& coils)
