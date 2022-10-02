@@ -16,14 +16,21 @@ constexpr double COIL_LENGTH_STEP = 5.0;
 constexpr double COIL_LENGTH_RANGE[] = {15, 70};
 
 constexpr int COIL_TURN_STEP = 10; // turns
-constexpr int COIL_TURN_RANGE[] = {30, 300}; // turns
+constexpr int COIL_TURN_RANGE[] = {50, 300}; // turns
 
 constexpr double PROJECTILE_LENGTH_STEP = 5;
 constexpr double PROJECTILE_LENGTH_RANGE[] = { 20, 75 };
 
 // Values
-constexpr double COIL_WIRE_SIZES[] = { 0.5, 0.7, 0.9 };
-constexpr double PROJECTILE_DIAMETERS[] = { 4.5, 5.5, 8.0 };
+constexpr double COIL_WIRE_SIZES[] = { 0.5, 0.9, 1.2 };
+constexpr double PROJECTILE_DIAMETERS[] = { 4.5, 5.5, 8.0, 10.0 };
+
+// Not used:
+constexpr CoilGunSim::ProjectileShape PROJECTILE_TYPES[] = {
+    CoilGunSim::ProjectileShape::Cylinder,
+    CoilGunSim::ProjectileShape::Ball,
+    CoilGunSim::ProjectileShape::Angled45
+};
 
 inline std::vector<CoilGunSim::SimParameters> GetCoilVariants(int* numCoils)
 {
