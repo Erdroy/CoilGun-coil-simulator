@@ -4,6 +4,7 @@ I'm designing super-optimized coilgun, and I needed to compare hundreds of coils
 
 ![image](https://github.com/Erdroy/CoilGun-coil-simulator/assets/7634316/84388012-2b7f-4bd5-ad6e-1ed5a961d53d)
 Simulation can be stopped, program will resume where it ended.
+Source code is here: [coilgunsim](https://github.com/Erdroy/CoilGun-coil-simulator/tree/master/cfemm/coilgunsim)
 
 # How to use (Windows, Release version):
 - Download latest version from Release tab,
