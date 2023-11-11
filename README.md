@@ -6,6 +6,9 @@ I'm designing super-optimized coilgun, and I needed to compare hundreds of coils
 Simulation can be stopped, program will resume where it ended.
 Source code is here: [coilgunsim](https://github.com/Erdroy/CoilGun-coil-simulator/tree/master/cfemm/coilgunsim)
 
+Note that there is a bug with multithreading, when simulating less coils than amount of threads.
+It says that the simulation is finished, but it still simulates the coils. Workaround is to reduce amount of threads if you feel annoyed with it.
+
 # How to use (Windows, Release version):
 - Download latest version from Release tab,
 - Unzip it somewhere,
