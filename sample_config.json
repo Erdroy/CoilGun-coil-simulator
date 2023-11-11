@@ -1,4 +1,6 @@
 {
+    "NumThreads" : 20,
+    
     "CoilLengthStep" : 5.0,
     "CoilLengthRange" : [ 15, 70 ],
     "CoilTurnStep" : 10,

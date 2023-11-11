@@ -10,7 +10,7 @@
 
 #define PRINT_TIME() printf("Time: %.2fs\n", static_cast<double>(clock() - g_now) / CLOCKS_PER_SEC)
 
-constexpr uint32_t num_threads = 20u;
+uint32_t num_threads = 20u;
 
 clock_t g_now;
 uint32_t g_skippedCoils = 0u;
@@ -214,7 +214,7 @@ void SimulateVariants(const int numCoils, const std::vector<CoilGunSim::SimParam
 int LoadConfig(nlohmann::json& config)
 {
     FILE* file = nullptr;
-    fopen_s(&file, "config.json", "r");
+    fopen_s(&file, "config.json", "rb");
     if (file == nullptr)
     {
         printf("Failed to open config.json file!\n");
@@ -247,6 +247,8 @@ int main(int argc, char** argv)
     if (LoadConfig(config))
         return -1;
     
+    num_threads = (uint32_t)config["NumThreads"].get<int>();
+
     PermutationConfig permConfig = {};
     permConfig.Read(config);
 

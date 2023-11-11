@@ -7,7 +7,23 @@ Clone repo to a new directory.
 Open the directory in a command line:
 cmake .\xfemm\cfemm\ -G "Visual Studio 17 2022" -A x64
 
-Take sample_config.json and put it near coilgunsim.exe and rename the JSON file to config.json
+Take sample_config.json and put it into xfemm\coilgunsim directory (working dir is screwed up and I didn't have time to fix it) and rename the JSON file to config.json
+
+# Config description:
+Every value uses milimeters as the unit.
+- NumThreads - How many threads to use (use number of logical CPU cores - 1)
+- CoilLengthStep - step size for coil length (how much to increase the length by each iteration)
+- CoilLengthRange - range of coil lengths to simulate
+- CoilTurnStep - step size for coil turns
+- CoilTurnRange - range of coil turns to simulate
+- CoilWireSizes - list of wire sizes to simulate
+- ProjectileLengthStep - step size for projectile length
+- ProjectileLengthRange - range of projectile lengths to simulate
+- ProjectileDiameters - list of projectile diameters to simulate
+- BoundaryLayers - list of boundary layers to simulate
+- BoundaryHeight - height of boundary layer
+- BoreWallThickness - thickness of bore wall
+- WireCompactFactor - compact factor for wire
 
 # License
 MIT
