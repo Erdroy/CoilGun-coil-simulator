@@ -1,13 +1,36 @@
 # xfemm based CoilGun coil simulator
 This is my simulator for simulating multiple coils using multiple threads.
+I'm designing super-optimized coilgun, and I needed to compare hundreds of coils, so I made this.
+
+![image](https://github.com/Erdroy/CoilGun-coil-simulator/assets/7634316/84388012-2b7f-4bd5-ad6e-1ed5a961d53d)
+Simulation can be stopped, program will resume where it ended.
+
+# How to use (Windows, Release version):
+- Download latest version from Release tab,
+- Unzip it somewhere,
+- Adjust config.json to match your needs,
+- Open `coilgunsim.exe` and it will start the simulation. This will output data in Data folder.
+- Open Data folder and take a look at .csv and .json files. It's the data, do whatever you want with it (simulate, graph forces etc.)
+
+# Data format
+- Naming: 0.9_C15x100T-P8.0x30, this means 0.9mm wire, C15 is the length of the coil (15mm), 100T is the amount of turns, P8.0 is the diameter of the coil, x30 is the length of the coil.
+- csv file contains data like this:
+```
+Distance, Inductance, Force@10A, Force@100A, Force@1000A 
+0.000000, 390.797750, 0.008886, 0.130171, 0.596539
+1.000000, 390.824651, 0.130918, 2.538926, 23.916522
+2.000000, 386.938488, 0.238714, 4.885965, 48.689247
+3.000000, 382.931224, 0.363702, 7.692373, 79.129892
+...
+```
+Each line is the distance from center of the coil to center of the projectile. There are different forces (Newtons) at given currents and the inductance (uH/Microhenry) at a point.
+- JSON file should be self-explanatory.
 
 # Build (Windows)
-Install CMake, and Visual Studio 2022
-Clone repo to a new directory.
-Open the directory in a command line:
-cmake .\xfemm\cfemm\ -G "Visual Studio 17 2022" -A x64
-
-Take sample_config.json and put it into xfemm\coilgunsim directory (working dir is screwed up and I didn't have time to fix it) and rename the JSON file to config.json
+- Install CMake and Visual Studio 2022,
+- Clone repo to a new directory,
+- Open the directory in a command line: `cmake .\xfemm\cfemm\ -G "Visual Studio 17 2022" -A x64`
+- Take sample_config.json and put it into xfemm\coilgunsim directory (working dir is screwed up and I didn't have time to fix it) and rename the JSON file to config.json
 
 # Config description:
 Every value uses milimeters as the unit.
@@ -20,10 +43,10 @@ Every value uses milimeters as the unit.
 - ProjectileLengthStep - step size for projectile length
 - ProjectileLengthRange - range of projectile lengths to simulate
 - ProjectileDiameters - list of projectile diameters to simulate
-- BoundaryLayers - list of boundary layers to simulate
-- BoundaryHeight - height of boundary layer
-- BoreWallThickness - thickness of bore wall
-- WireCompactFactor - compact factor for wire
+- BoundaryLayers - number of boundary layers to use for simulation (higher is better, less noise, but slower)
+- BoundaryHeight - height of boundary layer (this should be at least 150, should be as small as possible, but FEMM might not be able to simulate the projectile if it is too long and this value too small)
+- BoreWallThickness - thickness of the bore's wall
+- WireCompactFactor - compact factor for wire (1.1 is pretty ok)
 
 # License
 MIT
