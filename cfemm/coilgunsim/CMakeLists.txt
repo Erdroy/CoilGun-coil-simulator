@@ -3,6 +3,7 @@ add_library(coilgunsim STATIC
     FemmAPI.h
     FemmExtensions.h
     CoilGen.h
+    json.hpp
     CoilGunSim.h
     CoilGunSim.cpp
     CoilGunSim.Simulation.cpp
@@ -19,6 +20,7 @@ target_link_libraries(coilgunsim
 add_executable(coilgunsim-bin
     ThreadPool.h
     ThreadPool.cpp
+    json.hpp
     main.cpp
     )
 

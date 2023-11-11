@@ -6,6 +6,8 @@
 #include <Windows.h>
 #endif
 
+#include <json.hpp>
+
 #define PRINT_TIME() printf("Time: %.2fs\n", static_cast<double>(clock() - g_now) / CLOCKS_PER_SEC)
 
 constexpr uint32_t num_threads = 20u;
@@ -133,7 +135,8 @@ void WriteDataToFile(const CoilGunSim::SimParameters& parameters, const CoilGunS
     fclose(file);
 }
 
-void SimulateSingle()
+// Unused:
+/*void SimulateSingle()
 {
     CoilGunSim sim = {};
     sim.EnableLogging = true;
@@ -149,7 +152,7 @@ void SimulateSingle()
     const auto data = sim.Simulate("temp0.fem", parameters);
     // Write the simulation data to a file, inside "Data" folder
     WriteDataToFile(parameters, data);
-}
+}*/
 
 void ThreadWorker(const CoilGunSim::SimParameters* coil, const int coilId, const int numCoils, const uint32_t threadId)
 {
@@ -208,12 +211,47 @@ void SimulateVariants(const int numCoils, const std::vector<CoilGunSim::SimParam
     }
 }
 
+int LoadConfig(nlohmann::json& config)
+{
+    FILE* file = nullptr;
+    fopen_s(&file, "config.json", "r");
+    if (file == nullptr)
+    {
+        printf("Failed to open config.json file!\n");
+        system("pause");
+        return 1;
+    }
+    fseek(file, 0, SEEK_END);
+
+    // Read file to string
+    const auto size = ftell(file);
+    rewind(file);
+    char* buffer = new char[size + 1];
+    fread(buffer, 1, size, file);
+    buffer[size] = '\0';
+    fclose(file);
+
+    // Parse config
+    config = nlohmann::json::parse(buffer);
+
+    delete [] buffer;
+    return 0;
+}
+
 int main(int argc, char** argv)
 {
     g_now = clock();
 
+    // Load config.json file using fopen and nlohmann::json
+    nlohmann::json config;
+    if (LoadConfig(config))
+        return -1;
+    
+    PermutationConfig permConfig = {};
+    permConfig.Read(config);
+
     int numCoils = 0;
-    const auto coils = GetCoilVariants(&numCoils);
+    const auto coils = GetCoilVariants(&numCoils, permConfig);
 
 #ifdef _WIN32
     // Create Data directory if it doesn't exist (using Win32 API)

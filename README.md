@@ -1,3 +1,18 @@
+# xfemm based CoilGun coil simulator
+This is my simulator for simulating multiple coils using multiple threads.
+
+# Build (Windows)
+Install CMake, and Visual Studio 2022
+Clone repo to a new directory.
+Open the directory in a command line:
+cmake .\xfemm\cfemm\ -G "Visual Studio 17 2022" -A x64
+
+Take sample_config.json and put it near coilgunsim.exe and rename the JSON file to config.json
+
+# License
+MIT
+
+# Original README:
 # Welcome to xfemm
 
 Welcome to the xfemm project. xfemm is a software project intended to
